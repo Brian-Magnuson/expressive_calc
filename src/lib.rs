@@ -1,14 +1,11 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+mod calc_error;
+pub use calc_error::CalcError;
+
+pub fn evaluate(_input: &str) -> Result<f64, CalcError> {
+    Ok(0.0)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+// }
