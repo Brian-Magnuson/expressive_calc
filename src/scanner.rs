@@ -1,6 +1,12 @@
+//! Module for scanning an input string and converting it into a vector of tokens.
+
 use crate::calc_error::CalcError;
 use std::{iter::Peekable, str::Chars};
 
+/// Enum for the different types of tokens that can be scanned.
+///
+/// Token types include numbers, operators, and parentheses.
+/// All numbers are represented as f64.
 #[derive(Debug, PartialEq)]
 pub enum Token {
     Number(f64),
@@ -12,8 +18,25 @@ pub enum Token {
     RParen,
 }
 
+/// A scanner used to help convert an input string into a vector of tokens.
+///
+/// Provides a scanning function, [`Scanner::scan`], that converts an input string into a vector of tokens.
 pub struct Scanner {}
 impl Scanner {
+    /// Scans the input string and returns a vector of tokens.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`CalcError`] if an invalid character is encountered, or if a number cannot be parsed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use expressive_calc::scanner::{Scanner, Token};
+    /// let input = "1 + 2.1";
+    /// let expected = vec![Token::Number(1.0), Token::Plus, Token::Number(2.1)];
+    /// assert_eq!(Scanner::scan(input).unwrap(), expected);
+    /// ```
     pub fn scan(input: &str) -> Result<Vec<Token>, CalcError> {
         let mut input_iter = input.chars().peekable();
         let mut tokens = Vec::new();
@@ -138,5 +161,95 @@ mod tests {
         let input = "0";
         let expected = vec![Token::Number(0.0)];
         assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_number() {
+        let input = "123.456";
+        let expected = vec![Token::Number(123.456)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_number_scientific_notation() {
+        let input = "1.23E4";
+        let expected = vec![Token::Number(1.23E4)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_number_negative_exponent() {
+        let input = "1.23E-4";
+        let expected = vec![Token::Number(1.23E-4)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_number_plus_exponent() {
+        let input = "1.23E+4";
+        let expected = vec![Token::Number(1.23E4)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_addition() {
+        let input = "1 + 2";
+        let expected = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_negation() {
+        let input = "-1";
+        let expected = vec![Token::Minus, Token::Number(1.0)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_multiplication() {
+        let input = "2 * 3";
+        let expected = vec![Token::Number(2.0), Token::Star, Token::Number(3.0)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_three_terms() {
+        let input = "1 + 2 * 3";
+        let expected = vec![
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::Star,
+            Token::Number(3.0),
+        ];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_parentheses() {
+        let input = "(1 + 2) * 3";
+        let expected = vec![
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::RParen,
+            Token::Star,
+            Token::Number(3.0),
+        ];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_add_scientific_notation() {
+        let input = "1.23E4 + 5.67E-8";
+        let expected = vec![Token::Number(1.23E4), Token::Plus, Token::Number(5.67E-8)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_err_invalid_char() {
+        let input = "1 + a";
+        assert!(matches!(Scanner::scan(input), Err(CalcError { .. })));
     }
 }
