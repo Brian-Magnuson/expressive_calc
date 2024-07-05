@@ -1,6 +1,7 @@
 use crate::calc_error::CalcError;
 use std::{iter::Peekable, str::Chars};
 
+#[derive(Debug, PartialEq)]
 pub enum Token {
     Number(f64),
     Plus,
@@ -21,6 +22,36 @@ impl Scanner {
             match input_iter.peek() {
                 None => return Ok(tokens),
                 Some(c) => match c {
+                    ' ' => {
+                        input_iter.next();
+                    }
+                    '+' => {
+                        tokens.push(Token::Plus);
+                        input_iter.next();
+                    }
+                    '-' => {
+                        tokens.push(Token::Minus);
+                        input_iter.next();
+                    }
+                    '*' => {
+                        tokens.push(Token::Star);
+                        input_iter.next();
+                    }
+                    '/' => {
+                        tokens.push(Token::Slash);
+                        input_iter.next();
+                    }
+                    '(' => {
+                        tokens.push(Token::LParen);
+                        input_iter.next();
+                    }
+                    ')' => {
+                        tokens.push(Token::RParen);
+                        input_iter.next();
+                    }
+                    '0'..='9' => {
+                        tokens.push(Token::Number(Scanner::scan_number(&mut input_iter)?));
+                    }
                     _ => return Err(CalcError::new("Invalid character", None)),
                 },
             }
@@ -67,5 +98,45 @@ impl Scanner {
             Ok(n) => Ok(n),
             Err(err) => Err(CalcError::new("Failed to parse number", Some(err.into()))),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scan_empty_str() {
+        let input = "";
+        let expected = vec![];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_whitespace() {
+        let input = "  ";
+        let expected = vec![];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_plus() {
+        let input = "+";
+        let expected = vec![Token::Plus];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_minus() {
+        let input = "-";
+        let expected = vec![Token::Minus];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_scan_digit() {
+        let input = "0";
+        let expected = vec![Token::Number(0.0)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
     }
 }

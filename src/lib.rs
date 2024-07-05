@@ -1,7 +1,7 @@
 mod calc_error;
 pub use calc_error::CalcError;
 
-mod scanner;
+pub mod scanner;
 
 pub fn evaluate(_input: &str) -> Result<f64, CalcError> {
     Ok(0.0)
