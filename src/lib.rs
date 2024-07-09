@@ -1,6 +1,7 @@
 mod calc_error;
 pub use calc_error::CalcError;
 
+pub mod parser;
 pub mod scanner;
 
 pub fn evaluate(_input: &str) -> Result<f64, CalcError> {
