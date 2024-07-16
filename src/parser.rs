@@ -5,6 +5,7 @@ use crate::scanner::Token;
 
 use std::{iter::Peekable, slice::Iter};
 
+#[derive(Debug, PartialEq)]
 enum Expr {
     Number(f64),
     UnaryOp {
@@ -130,5 +131,37 @@ impl<'a> Parser<'a> {
             }
             _ => Err(CalcError::new("Not a valid expression", None)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_empty() {
+        let input = vec![];
+        let mut parser = Parser::new(&input);
+        assert!(parser.parse().is_err());
+    }
+
+    #[test]
+    fn test_parse_number() {
+        let input = vec![Token::Number(42.0)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::Number(42.0));
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_parse_addition() {
+        let input = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Plus,
+            left: Box::new(Expr::Number(1.0)),
+            right: Box::new(Expr::Number(2.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
     }
 }
