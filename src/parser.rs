@@ -164,4 +164,62 @@ mod tests {
         });
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
+
+    #[test]
+    fn test_parse_subtraction() {
+        let input = vec![Token::Number(1.0), Token::Minus, Token::Number(2.0)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Minus,
+            left: Box::new(Expr::Number(1.0)),
+            right: Box::new(Expr::Number(2.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_order_of_operations() {
+        let input = vec![
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::Star,
+            Token::Number(3.0),
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Plus,
+            left: Box::new(Expr::Number(1.0)),
+            right: Box::new(Expr::BinaryOp {
+                op: Token::Star,
+                left: Box::new(Expr::Number(2.0)),
+                right: Box::new(Expr::Number(3.0)),
+            }),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_grouping() {
+        let input = vec![
+            Token::LParen,
+            Token::Number(1.0),
+            Token::Plus,
+            Token::Number(2.0),
+            Token::RParen,
+            Token::Star,
+            Token::Number(3.0),
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Star,
+            left: Box::new(Expr::BinaryOp {
+                op: Token::Plus,
+                left: Box::new(Expr::Number(1.0)),
+                right: Box::new(Expr::Number(2.0)),
+            }),
+            right: Box::new(Expr::Number(3.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
 }
