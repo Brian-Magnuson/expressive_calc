@@ -154,6 +154,17 @@ mod tests {
     }
 
     #[test]
+    fn test_unary_op() {
+        let input = vec![Token::Minus, Token::Number(42.0)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::UnaryOp {
+            op: Token::Minus,
+            operand: Box::new(Expr::Number(42.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
     fn test_parse_addition() {
         let input = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
         let mut parser = Parser::new(&input);
@@ -221,5 +232,26 @@ mod tests {
             right: Box::new(Expr::Number(3.0)),
         });
         assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_unexpected_token() {
+        let input = vec![Token::Plus];
+        let mut parser = Parser::new(&input);
+        assert!(parser.parse().is_err());
+    }
+
+    #[test]
+    fn test_missing_closing_paren() {
+        let input = vec![Token::LParen, Token::Number(1.0)];
+        let mut parser = Parser::new(&input);
+        assert!(parser.parse().is_err());
+    }
+
+    #[test]
+    fn test_excess_tokens() {
+        let input = vec![Token::Number(1.0), Token::Number(2.0)];
+        let mut parser = Parser::new(&input);
+        assert!(parser.parse().is_err());
     }
 }
