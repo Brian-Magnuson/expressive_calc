@@ -1,6 +1,7 @@
 mod calc_error;
 pub use calc_error::CalcError;
 
+pub mod interpreter;
 pub mod parser;
 pub mod scanner;
 

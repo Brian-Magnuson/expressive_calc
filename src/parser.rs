@@ -6,7 +6,7 @@ use crate::scanner::Token;
 use std::{iter::Peekable, slice::Iter};
 
 #[derive(Debug, PartialEq)]
-enum Expr {
+pub enum Expr {
     Number(f64),
     UnaryOp {
         op: Token,
