@@ -19,7 +19,7 @@ pub enum Expr {
     },
 }
 
-trait Visitor<T> {
+pub trait Visitor<T> {
     fn visit(&self, expr: &Expr) -> T;
 }
 
