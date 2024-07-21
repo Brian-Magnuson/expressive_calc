@@ -5,6 +5,11 @@ pub mod interpreter;
 pub mod parser;
 pub mod scanner;
 
+/// Evaluate an expression without storing state.
+///
+/// This function will scan the input string, parse the tokens, and interpret the expression.
+/// The parser and interpreter are dropped after the function returns, meaning
+/// no state is stored between calls.
 pub fn evaluate(input: &str) -> Result<f64, CalcError> {
     let tokens = scanner::Scanner::scan(input)?;
 

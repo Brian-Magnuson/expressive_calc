@@ -5,6 +5,7 @@ use crate::scanner::Token;
 
 use std::{iter::Peekable, slice::Iter};
 
+/// An expression in the form of an abstract syntax tree.
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Number(f64),
@@ -19,10 +20,21 @@ pub enum Expr {
     },
 }
 
+/// A visitor trait for traversing an abstract syntax tree.
+///
+/// Although the trait is named `Visitor`, it is not a true visitor pattern.
+/// Because expressions are enums, implementing the `visit` method means
+/// handling each variant of the enum in a single location.
 pub trait Visitor<T> {
+    /// Visit an expression.
+    ///
+    /// When traversing an AST, this method will be called for each node.
+    /// Because `Expr` is an enum, the implementor will be responsible for
+    /// handling each variant of the enum.
     fn visit(&self, expr: &Expr) -> T;
 }
 
+/// A parser used for generating an abstract syntax tree from a vector of tokens.
 pub struct Parser<'a> {
     iter: Peekable<Iter<'a, Token>>,
 }
@@ -43,10 +55,16 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse an expression.
+    ///
+    /// This function will call the first part of the recursive descent parser.
     fn expr(&mut self) -> Result<Box<Expr>, CalcError> {
         self.term()
     }
 
+    /// Parse a term binary expression.
+    ///
+    /// Term operations include addition and subtraction.
     fn term(&mut self) -> Result<Box<Expr>, CalcError> {
         let expr = self.factor()?;
         loop {
@@ -76,6 +94,9 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a factor binary expression.
+    ///
+    /// Factor operations include multiplication and division.
     fn factor(&mut self) -> Result<Box<Expr>, CalcError> {
         let expr = self.unary()?;
         loop {
@@ -105,6 +126,9 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a unary expression.
+    ///
+    /// A unary expression is either a primary expression or a unary operator followed by a primary expression.
     fn unary(&mut self) -> Result<Box<Expr>, CalcError> {
         match self.iter.peek() {
             Some(Token::Minus) => {
@@ -119,6 +143,9 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a primary expression.
+    ///
+    /// A primary expression is either a number or an expression enclosed in parentheses.
     fn primary(&mut self) -> Result<Box<Expr>, CalcError> {
         match self.iter.next() {
             Some(Token::Number(n)) => Ok(Box::new(Expr::Number(*n))),

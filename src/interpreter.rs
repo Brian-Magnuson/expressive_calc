@@ -2,12 +2,20 @@ use crate::calc_error::CalcError;
 use crate::parser::{Expr, Visitor};
 use crate::scanner::Token;
 
+/// An interpreter for evaluating an abstract syntax tree.
+///
+/// The `interpret` method will traverse the AST and evaluate the expression.
+/// State information may be stored in the struct.
 pub struct Interpreter {}
 impl Interpreter {
+    /// Create a new interpreter.
     pub fn new() -> Self {
         Interpreter {}
     }
 
+    /// Interpret an expression.
+    ///
+    /// This method will visit each node in the AST and evaluate the expression.
     pub fn interpret(&self, input: Box<Expr>) -> Result<f64, CalcError> {
         Ok(self.visit(&input))
     }
