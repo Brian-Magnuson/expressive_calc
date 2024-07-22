@@ -33,7 +33,7 @@ impl Calculator {
         let mut parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
 
-        Ok(self.interpreter.interpret(expr))
+        Ok(self.interpreter.interpret(expr)?)
     }
 
     /// Evaluate an expression without storing state.
@@ -51,7 +51,7 @@ impl Calculator {
         let mut parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
 
-        Ok(self.interpreter.quick_interpret(expr))
+        Ok(self.interpreter.quick_interpret(expr)?)
     }
 }
 

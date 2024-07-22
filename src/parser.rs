@@ -9,6 +9,7 @@ use std::{iter::Peekable, slice::Iter};
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Number(f64),
+    Variable(String),
     UnaryOp {
         op: Token,
         operand: Box<Expr>,
@@ -31,7 +32,7 @@ pub trait Visitor<T> {
     /// When traversing an AST, this method will be called for each node.
     /// Because `Expr` is an enum, the implementor will be responsible for
     /// handling each variant of the enum.
-    fn visit(&self, expr: &Expr) -> T;
+    fn visit(&self, expr: &Expr) -> Result<T, CalcError>;
 }
 
 /// A parser used for generating an abstract syntax tree from a vector of tokens.
@@ -145,10 +146,11 @@ impl<'a> Parser<'a> {
 
     /// Parse a primary expression.
     ///
-    /// A primary expression is either a number or an expression enclosed in parentheses.
+    /// A primary expression is either a number, variable, or an expression enclosed in parentheses.
     fn primary(&mut self) -> Result<Box<Expr>, CalcError> {
         match self.iter.next() {
             Some(Token::Number(n)) => Ok(Box::new(Expr::Number(*n))),
+            Some(Token::Variable(s)) => Ok(Box::new(Expr::Variable(s.clone()))),
             Some(Token::LParen) => {
                 let expr = self.expr()?;
                 match self.iter.next() {
@@ -258,6 +260,14 @@ mod tests {
             }),
             right: Box::new(Expr::Number(3.0)),
         });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_variable() {
+        let input = vec![Token::Variable("$x".to_string())];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::Variable("$x".to_string()));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
 
