@@ -16,6 +16,7 @@ pub enum Token {
     Slash,
     LParen,
     RParen,
+    Variable(String),
 }
 
 /// A scanner used to help convert an input string into a vector of tokens.
@@ -62,6 +63,10 @@ impl Scanner {
                     ')' => {
                         tokens.push(Token::RParen);
                         input_iter.next();
+                    }
+                    '$' => {
+                        input_iter.next();
+                        tokens.push(Token::Variable(Scanner::scan_variable(&mut input_iter)?));
                     }
                     '0'..='9' => {
                         tokens.push(Token::Number(Scanner::scan_number(&mut input_iter)?));
@@ -112,6 +117,40 @@ impl Scanner {
             Ok(n) => Ok(n),
             Err(err) => Err(CalcError::new("Failed to parse number", Some(err.into()))),
         }
+    }
+
+    /// Scans a variable from the input iterator.
+    ///
+    /// All variables must start with a '$' and can contain any alphanumeric character.
+    /// If an invalid character is encountered, the variable is considered complete.
+    /// An exception is when there are no characters following the '$'.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`CalcError`] if there were no alphanumeric characters following the '$'.
+    fn scan_variable(input_iter: &mut Peekable<Chars>) -> Result<String, CalcError> {
+        let mut variable = String::from("$");
+        let mut has_char = false;
+
+        loop {
+            match input_iter.peek() {
+                None => break,
+                Some(c) => match c {
+                    '0'..='9' | 'a'..='z' | 'A'..='Z' => {
+                        variable.push(*c);
+                        has_char = true;
+                        input_iter.next();
+                    }
+                    _ => break,
+                },
+            }
+        }
+
+        if !has_char {
+            return Err(CalcError::new("Invalid variable", None));
+        }
+
+        Ok(variable)
     }
 }
 
@@ -242,5 +281,12 @@ mod tests {
     fn test_err_invalid_char() {
         let input = "1 + a";
         assert!(matches!(Scanner::scan(input), Err(CalcError { .. })));
+    }
+
+    #[test]
+    fn test_variable() {
+        let input = "$var";
+        let expected = vec![Token::Variable(String::from("$var"))];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
     }
 }
