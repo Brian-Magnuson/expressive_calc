@@ -1,23 +1,44 @@
-use crate::calc_error::CalcError;
 use crate::parser::{Expr, Visitor};
 use crate::scanner::Token;
+use std::collections::HashMap;
 
 /// An interpreter for evaluating an abstract syntax tree.
 ///
 /// The `interpret` method will traverse the AST and evaluate the expression.
 /// State information may be stored in the struct.
-pub struct Interpreter {}
+pub struct Interpreter {
+    table: HashMap<String, f64>,
+    variable_count: usize,
+}
 impl Interpreter {
     /// Create a new interpreter.
     pub fn new() -> Self {
-        Interpreter {}
+        Interpreter {
+            table: HashMap::new(),
+            variable_count: 0,
+        }
     }
 
-    /// Interpret an expression.
+    /// Interpret an expression and return a variable name and result.
     ///
     /// This method will visit each node in the AST and evaluate the expression.
-    pub fn interpret(&self, input: Box<Expr>) -> Result<f64, CalcError> {
-        Ok(self.visit(&input))
+    /// The result will be stored in a variable name that can be used in future expressions.
+    /// Variables are named based on the order: `$0`, `$1`, `$2`, etc.
+    pub fn interpret(&mut self, input: Box<Expr>) -> (String, f64) {
+        let result = self.visit(&input);
+        let name = format!("${}", self.variable_count);
+        self.table.insert(name.clone(), result);
+        self.variable_count += 1;
+        (name, result)
+    }
+
+    /// Interpret an expression without storing the result.
+    ///
+    /// This method will visit each node in the AST and evaluate the expression.
+    /// Variables previously stored in the interpreter may still be used,
+    /// but no new variables will be created.
+    pub fn quick_interpret(&self, input: Box<Expr>) -> f64 {
+        self.visit(&input)
     }
 }
 impl Visitor<f64> for Interpreter {
@@ -57,8 +78,8 @@ mod tests {
             left: Box::new(Expr::Number(1.0)),
             right: Box::new(Expr::Number(2.0)),
         });
-        let interpreter = Interpreter {};
-        let result = interpreter.interpret(input).unwrap();
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input);
         assert_eq!(result, 3.0);
     }
 
@@ -68,8 +89,8 @@ mod tests {
             op: Token::Minus,
             operand: Box::new(Expr::Number(42.0)),
         });
-        let interpreter = Interpreter {};
-        let result = interpreter.interpret(input).unwrap();
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input);
         assert_eq!(result, -42.0);
     }
 
@@ -84,8 +105,8 @@ mod tests {
                 right: Box::new(Expr::Number(3.0)),
             }),
         });
-        let interpreter = Interpreter {};
-        let result = interpreter.interpret(input).unwrap();
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input);
         assert_eq!(result, 7.0);
     }
 
@@ -100,8 +121,8 @@ mod tests {
                 right: Box::new(Expr::Number(2.0)),
             }),
         });
-        let interpreter = Interpreter {};
-        let result = interpreter.interpret(input).unwrap();
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input);
         assert_eq!(result, 1.0);
     }
 }

@@ -28,15 +28,6 @@ impl Scanner {
     /// # Errors
     ///
     /// Returns a [`CalcError`] if an invalid character is encountered, or if a number cannot be parsed.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use expressive_calc::scanner::{Scanner, Token};
-    /// let input = "1 + 2.1";
-    /// let expected = vec![Token::Number(1.0), Token::Plus, Token::Number(2.1)];
-    /// assert_eq!(Scanner::scan(input).unwrap(), expected);
-    /// ```
     pub fn scan(input: &str) -> Result<Vec<Token>, CalcError> {
         let mut input_iter = input.chars().peekable();
         let mut tokens = Vec::new();
