@@ -3,6 +3,15 @@
 use crate::calc_error::CalcError;
 use std::{iter::Peekable, str::Chars};
 
+/// Enum for the different reserved words in the calculator.
+///
+/// Keywords are special tokens that have a specific meaning in the calculator.
+/// These include functions like `sqrt`.
+#[derive(Debug, PartialEq)]
+pub enum Word {
+    Sqrt,
+}
+
 /// Enum for the different types of tokens that can be scanned.
 ///
 /// Token types include numbers, operators, and parentheses.
@@ -17,6 +26,7 @@ pub enum Token {
     LParen,
     RParen,
     Variable(String),
+    Keyword(Word),
 }
 
 /// A scanner used to help convert an input string into a vector of tokens.
@@ -62,6 +72,10 @@ impl Scanner {
                     }
                     ')' => {
                         tokens.push(Token::RParen);
+                        input_iter.next();
+                    }
+                    'a'..='z' | 'A'..='Z' => {
+                        tokens.push(Token::Keyword(Scanner::scan_word(&mut input_iter)?));
                         input_iter.next();
                     }
                     '$' => {
@@ -152,8 +166,33 @@ impl Scanner {
 
         Ok(variable)
     }
+
+    /// Scans a reserved word from the input iterator.
+    ///
+    /// Reserved words include special functions like `sqrt`.
+    fn scan_word(input_iter: &mut Peekable<Chars>) -> Result<Word, CalcError> {
+        let mut keyword = String::new();
+        loop {
+            match input_iter.peek() {
+                None => break,
+                Some(c) => match c {
+                    'a'..='z' | 'A'..='Z' => {
+                        keyword.push(*c);
+                        input_iter.next();
+                    }
+                    _ => break,
+                },
+            }
+        }
+
+        match keyword.as_str() {
+            "sqrt" => Ok(Word::Sqrt),
+            _ => Err(CalcError::new("Unknown keyword", None)),
+        }
+    }
 }
 
+// MARK: Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -287,6 +326,13 @@ mod tests {
     fn test_variable() {
         let input = "$var";
         let expected = vec![Token::Variable(String::from("$var"))];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_keyword() {
+        let input = "sqrt";
+        let expected = vec![Token::Keyword(Word::Sqrt)];
         assert_eq!(Scanner::scan(input).unwrap(), expected);
     }
 }
