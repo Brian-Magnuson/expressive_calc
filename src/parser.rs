@@ -206,6 +206,7 @@ impl<'a> Parser<'a> {
                     operand: expr,
                 }))
             }
+            _ => Err(CalcError::new("Unrecognized word", None)),
         }
     }
 }

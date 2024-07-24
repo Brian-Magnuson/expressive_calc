@@ -9,7 +9,18 @@ use std::{iter::Peekable, str::Chars};
 /// These include functions like `sqrt`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Word {
+    // Numbers
+    Inf,
+
+    // Unary operations
     Sqrt,
+    Exp,
+    Ln,
+
+    // Binary operations
+    Pow,
+    Log,
+    Mod,
 }
 
 /// Enum for the different types of tokens that can be scanned.
@@ -191,7 +202,15 @@ impl Scanner {
         }
 
         match keyword.as_str() {
+            "inf" => Ok(Word::Inf),
+
             "sqrt" => Ok(Word::Sqrt),
+            "exp" => Ok(Word::Exp),
+            "ln" => Ok(Word::Ln),
+
+            "pow" => Ok(Word::Pow),
+            "log" => Ok(Word::Log),
+            "mod" => Ok(Word::Mod),
             _ => Err(CalcError::new("Unknown keyword", None)),
         }
     }
