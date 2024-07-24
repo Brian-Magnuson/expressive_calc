@@ -7,7 +7,7 @@ use std::{iter::Peekable, str::Chars};
 ///
 /// Keywords are special tokens that have a specific meaning in the calculator.
 /// These include functions like `sqrt`.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Word {
     Sqrt,
 }
@@ -25,6 +25,7 @@ pub enum Token {
     Slash,
     LParen,
     RParen,
+    Comma,
     Variable(String),
     Keyword(Word),
 }
@@ -72,6 +73,10 @@ impl Scanner {
                     }
                     ')' => {
                         tokens.push(Token::RParen);
+                        input_iter.next();
+                    }
+                    ',' => {
+                        tokens.push(Token::Comma);
                         input_iter.next();
                     }
                     'a'..='z' | 'A'..='Z' => {

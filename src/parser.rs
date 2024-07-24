@@ -1,7 +1,7 @@
 //! Module for parsing a vector of tokens into an abstract syntax tree.
 
-use crate::calc_error::CalcError;
 use crate::scanner::Token;
+use crate::{calc_error::CalcError, scanner::Word};
 
 use std::{iter::Peekable, slice::Iter};
 
@@ -41,18 +41,49 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// Create a new parser with a slice of tokens.
     pub fn new(tokens: &'a [Token]) -> Self {
         Parser {
             iter: tokens.iter().peekable(),
         }
     }
 
+    /// Parse the tokens into an abstract syntax tree.
+    ///
+    /// This function will call the first part of the recursive descent parser.
+    /// If the iterator is not empty after parsing, an error is returned, even if
+    /// the preceding tokens were valid.
     pub fn parse(&mut self) -> Result<Box<Expr>, CalcError> {
         let result = self.expr();
         // Ensure that the iterator is empty after parsing
         match self.iter.peek() {
             Some(_) => Err(CalcError::new("Unexpected token", None)),
             None => result,
+        }
+    }
+
+    /// Check if the next token is the expected token and consume it if it is.
+    ///
+    /// If the next token is the expected token, consume it and return true.
+    /// Otherwise, return false, leaving the iterator unchanged.
+    fn optional(&mut self, token: Token) -> bool {
+        match self.iter.peek() {
+            Some(t) if *t == &token => {
+                self.iter.next();
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Require a token to be the next token in the iterator.
+    ///
+    /// Calls `next` on the iterator and compares the result to the expected token.
+    /// If the token is not the next token, an error is returned.
+    fn require(&mut self, token: Token, msg: &str) -> Result<(), CalcError> {
+        match self.iter.next() {
+            Some(t) if t == &token => Ok(()),
+            _ => Err(CalcError::new(msg, None)),
         }
     }
 
@@ -151,6 +182,7 @@ impl<'a> Parser<'a> {
         match self.iter.next() {
             Some(Token::Number(n)) => Ok(Box::new(Expr::Number(*n))),
             Some(Token::Variable(s)) => Ok(Box::new(Expr::Variable(s.clone()))),
+            Some(Token::Keyword(w)) => self.call(w),
             Some(Token::LParen) => {
                 let expr = self.expr()?;
                 match self.iter.next() {
@@ -159,6 +191,21 @@ impl<'a> Parser<'a> {
                 }
             }
             _ => Err(CalcError::new("Not a valid expression", None)),
+        }
+    }
+
+    fn call(&mut self, w: &Word) -> Result<Box<Expr>, CalcError> {
+        match w {
+            Word::Sqrt => {
+                self.require(Token::LParen, "Expected opening parenthesis")?;
+                let expr = self.expr()?;
+                self.optional(Token::Comma);
+                self.require(Token::RParen, "Expected closing parenthesis")?;
+                Ok(Box::new(Expr::UnaryOp {
+                    op: Token::Keyword(w.clone()),
+                    operand: expr,
+                }))
+            }
         }
     }
 }
@@ -290,5 +337,38 @@ mod tests {
         let input = vec![Token::Number(1.0), Token::Number(2.0)];
         let mut parser = Parser::new(&input);
         assert!(parser.parse().is_err());
+    }
+
+    #[test]
+    fn test_sqrt() {
+        let input = vec![
+            Token::Keyword(Word::Sqrt),
+            Token::LParen,
+            Token::Number(4.0),
+            Token::RParen,
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::UnaryOp {
+            op: Token::Keyword(Word::Sqrt),
+            operand: Box::new(Expr::Number(4.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_sqrt_trailing_comma() {
+        let input = vec![
+            Token::Keyword(Word::Sqrt),
+            Token::LParen,
+            Token::Number(4.0),
+            Token::Comma,
+            Token::RParen,
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::UnaryOp {
+            op: Token::Keyword(Word::Sqrt),
+            operand: Box::new(Expr::Number(4.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
     }
 }
