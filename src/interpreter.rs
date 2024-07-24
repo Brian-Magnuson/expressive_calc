@@ -1,5 +1,5 @@
 use crate::parser::{Expr, Visitor};
-use crate::scanner::Token;
+use crate::scanner::{Token, Word};
 use crate::CalcError;
 use std::collections::HashMap;
 
@@ -50,6 +50,7 @@ impl Visitor<f64> for Interpreter {
                 let operand = self.visit(operand)?;
                 match op {
                     Token::Minus => Ok(-operand),
+                    Token::Keyword(Word::Sqrt) => Ok(operand.sqrt()),
                     _ => Ok(0.0),
                 }
             }
@@ -129,5 +130,16 @@ mod tests {
         let mut interpreter = Interpreter::new();
         let (_, result) = interpreter.interpret(input).unwrap();
         assert_eq!(result, 1.0);
+    }
+
+    #[test]
+    fn test_interpret_sqrt() {
+        let input = Box::new(Expr::UnaryOp {
+            op: Token::Keyword(Word::Sqrt),
+            operand: Box::new(Expr::Number(9.0)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 3.0);
     }
 }
