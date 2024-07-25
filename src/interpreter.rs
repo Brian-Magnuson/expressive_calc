@@ -51,6 +51,8 @@ impl Visitor<f64> for Interpreter {
                 match op {
                     Token::Minus => Ok(-operand),
                     Token::Keyword(Word::Sqrt) => Ok(operand.sqrt()),
+                    Token::Keyword(Word::Exp) => Ok(operand.exp()),
+                    Token::Keyword(Word::Ln) => Ok(operand.ln()),
                     _ => Ok(0.0),
                 }
             }
@@ -62,6 +64,9 @@ impl Visitor<f64> for Interpreter {
                     Token::Minus => Ok(left - right),
                     Token::Star => Ok(left * right),
                     Token::Slash => Ok(left / right),
+                    Token::Keyword(Word::Pow) => Ok(left.powf(right)),
+                    Token::Keyword(Word::Log) => Ok(left.log(right)),
+                    Token::Keyword(Word::Mod) => Ok(left % right),
                     _ => Ok(0.0),
                 }
             }
@@ -141,5 +146,63 @@ mod tests {
         let mut interpreter = Interpreter::new();
         let (_, result) = interpreter.interpret(input).unwrap();
         assert_eq!(result, 3.0);
+    }
+
+    #[test]
+    fn test_interpret_exp() {
+        let input = Box::new(Expr::UnaryOp {
+            op: Token::Keyword(Word::Exp),
+            operand: Box::new(Expr::Number(1.0)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 2.718281828459045);
+    }
+
+    #[test]
+    fn test_interpret_ln() {
+        let input = Box::new(Expr::UnaryOp {
+            op: Token::Keyword(Word::Ln),
+            operand: Box::new(Expr::Number(2.718281828459045)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 1.0);
+    }
+
+    #[test]
+    fn test_interpret_pow() {
+        let input = Box::new(Expr::BinaryOp {
+            op: Token::Keyword(Word::Pow),
+            left: Box::new(Expr::Number(2.0)),
+            right: Box::new(Expr::Number(3.0)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 8.0);
+    }
+
+    #[test]
+    fn test_interpret_log() {
+        let input = Box::new(Expr::BinaryOp {
+            op: Token::Keyword(Word::Log),
+            left: Box::new(Expr::Number(8.0)),
+            right: Box::new(Expr::Number(2.0)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 3.0);
+    }
+
+    #[test]
+    fn test_interpret_mod() {
+        let input = Box::new(Expr::BinaryOp {
+            op: Token::Keyword(Word::Mod),
+            left: Box::new(Expr::Number(8.0)),
+            right: Box::new(Expr::Number(3.0)),
+        });
+        let mut interpreter = Interpreter::new();
+        let (_, result) = interpreter.interpret(input).unwrap();
+        assert_eq!(result, 2.0);
     }
 }

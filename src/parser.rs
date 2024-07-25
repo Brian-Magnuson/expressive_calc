@@ -196,7 +196,8 @@ impl<'a> Parser<'a> {
 
     fn call(&mut self, w: &Word) -> Result<Box<Expr>, CalcError> {
         match w {
-            Word::Sqrt => {
+            Word::Inf => Ok(Box::new(Expr::Number(f64::INFINITY))),
+            Word::Sqrt | Word::Exp | Word::Ln => {
                 self.require(Token::LParen, "Expected opening parenthesis")?;
                 let expr = self.expr()?;
                 self.optional(Token::Comma);
@@ -206,7 +207,19 @@ impl<'a> Parser<'a> {
                     operand: expr,
                 }))
             }
-            _ => Err(CalcError::new("Unrecognized word", None)),
+            Word::Pow | Word::Log | Word::Mod => {
+                self.require(Token::LParen, "Expected opening parenthesis")?;
+                let left = self.expr()?;
+                self.require(Token::Comma, "Expected comma")?;
+                let right = self.expr()?;
+                self.optional(Token::Comma);
+                self.require(Token::RParen, "Expected closing parenthesis")?;
+                Ok(Box::new(Expr::BinaryOp {
+                    op: Token::Keyword(w.clone()),
+                    left,
+                    right,
+                }))
+            }
         }
     }
 }
@@ -370,6 +383,33 @@ mod tests {
             op: Token::Keyword(Word::Sqrt),
             operand: Box::new(Expr::Number(4.0)),
         });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_pow() {
+        let input = vec![
+            Token::Keyword(Word::Pow),
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Comma,
+            Token::Number(3.0),
+            Token::RParen,
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Keyword(Word::Pow),
+            left: Box::new(Expr::Number(2.0)),
+            right: Box::new(Expr::Number(3.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_inf() {
+        let input = vec![Token::Keyword(Word::Inf)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::Number(f64::INFINITY));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
 }
