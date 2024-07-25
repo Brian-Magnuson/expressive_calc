@@ -11,6 +11,10 @@ use std::{iter::Peekable, str::Chars};
 pub enum Word {
     // Numbers
     Inf,
+    Pi,
+    Tau,
+    E,
+    Phi,
 
     // Unary operations
     Sqrt,
@@ -228,6 +232,10 @@ impl Scanner {
 
         match keyword.as_str() {
             "inf" => Ok(Word::Inf),
+            "pi" => Ok(Word::Pi),
+            "tau" => Ok(Word::Tau),
+            "e" => Ok(Word::E),
+            "phi" => Ok(Word::Phi),
 
             "sqrt" => Ok(Word::Sqrt),
             "cbrt" => Ok(Word::Cbrt),

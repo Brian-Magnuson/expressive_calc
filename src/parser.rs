@@ -5,6 +5,8 @@ use crate::{calc_error::CalcError, scanner::Word};
 
 use std::{iter::Peekable, slice::Iter};
 
+const PHI: f64 = 1.618033988749894848204586834365638118_f64;
+
 /// An expression in the form of an abstract syntax tree.
 #[derive(Debug, PartialEq)]
 pub enum Expr {
@@ -197,6 +199,10 @@ impl<'a> Parser<'a> {
     fn call(&mut self, w: &Word) -> Result<Box<Expr>, CalcError> {
         match w {
             Word::Inf => Ok(Box::new(Expr::Number(f64::INFINITY))),
+            Word::Pi => Ok(Box::new(Expr::Number(std::f64::consts::PI))),
+            Word::Tau => Ok(Box::new(Expr::Number(std::f64::consts::TAU))),
+            Word::E => Ok(Box::new(Expr::Number(std::f64::consts::E))),
+            Word::Phi => Ok(Box::new(Expr::Number(PHI))),
             Word::Sqrt
             | Word::Cbrt
             | Word::Exp

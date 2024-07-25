@@ -25,10 +25,12 @@ impl Interpreter {
     /// This method will visit each node in the AST and evaluate the expression.
     /// The result will be stored in a variable name that can be used in future expressions.
     /// Variables are named based on the order: `$0`, `$1`, `$2`, etc.
+    /// The last result is also stored in the variable `$ans`.
     pub fn interpret(&mut self, input: Box<Expr>) -> Result<(String, f64), CalcError> {
         let result = self.visit(&input)?;
         let name = format!("${}", self.variable_count);
         self.table.insert(name.clone(), result);
+        self.table.insert("$ans".to_string(), result);
         self.variable_count += 1;
         Ok((name, result))
     }
