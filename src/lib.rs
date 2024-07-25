@@ -55,6 +55,7 @@ impl Calculator {
     }
 }
 
+// MARK: Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -113,5 +114,29 @@ mod tests {
         let calculator = Calculator::new();
         let result = calculator.quick_evaluate(input).unwrap();
         assert_eq!(result, 9.0);
+    }
+
+    #[test]
+    fn test_inf() {
+        let input = "inf";
+        let calculator = Calculator::new();
+        let result = calculator.quick_evaluate(input).unwrap();
+        assert_eq!(result, f64::INFINITY);
+    }
+
+    #[test]
+    fn test_unary_func() {
+        let input = "sqrt(9)";
+        let calculator = Calculator::new();
+        let result = calculator.quick_evaluate(input).unwrap();
+        assert_eq!(result, 3.0);
+    }
+
+    #[test]
+    fn test_binary_func() {
+        let input = "pow(2, 3)";
+        let calculator = Calculator::new();
+        let result = calculator.quick_evaluate(input).unwrap();
+        assert_eq!(result, 8.0);
     }
 }

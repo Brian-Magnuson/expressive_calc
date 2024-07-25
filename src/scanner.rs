@@ -92,7 +92,6 @@ impl Scanner {
                     }
                     'a'..='z' | 'A'..='Z' => {
                         tokens.push(Token::Keyword(Scanner::scan_word(&mut input_iter)?));
-                        input_iter.next();
                     }
                     '$' => {
                         input_iter.next();
@@ -357,6 +356,20 @@ mod tests {
     fn test_keyword() {
         let input = "sqrt";
         let expected = vec![Token::Keyword(Word::Sqrt)];
+        assert_eq!(Scanner::scan(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_keyword_with_args() {
+        let input = "pow(2, 3)";
+        let expected = vec![
+            Token::Keyword(Word::Pow),
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Comma,
+            Token::Number(3.0),
+            Token::RParen,
+        ];
         assert_eq!(Scanner::scan(input).unwrap(), expected);
     }
 }

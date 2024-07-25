@@ -78,6 +78,7 @@ impl Visitor<f64> for Interpreter {
     }
 }
 
+// MARK: Tests
 #[cfg(test)]
 mod tests {
     use super::*;
