@@ -197,7 +197,31 @@ impl<'a> Parser<'a> {
     fn call(&mut self, w: &Word) -> Result<Box<Expr>, CalcError> {
         match w {
             Word::Inf => Ok(Box::new(Expr::Number(f64::INFINITY))),
-            Word::Sqrt | Word::Exp | Word::Ln => {
+            Word::Sqrt
+            | Word::Cbrt
+            | Word::Exp
+            | Word::Log2
+            | Word::Log10
+            | Word::Ln
+            | Word::Sin
+            | Word::Cos
+            | Word::Tan
+            | Word::Asin
+            | Word::Acos
+            | Word::Atan
+            | Word::Sinh
+            | Word::Cosh
+            | Word::Tanh
+            | Word::Asinh
+            | Word::Acosh
+            | Word::Atanh
+            | Word::Rad
+            | Word::Deg
+            | Word::Abs
+            | Word::Floor
+            | Word::Ceil
+            | Word::Trunc
+            | Word::Round => {
                 self.require(Token::LParen, "Expected opening parenthesis")?;
                 let expr = self.expr()?;
                 self.optional(Token::Comma);
@@ -207,7 +231,13 @@ impl<'a> Parser<'a> {
                     operand: expr,
                 }))
             }
-            Word::Pow | Word::Log | Word::Mod => {
+            Word::Pow
+            | Word::Log
+            | Word::Hypot
+            | Word::Atan2
+            | Word::Mod
+            | Word::Max
+            | Word::Min => {
                 self.require(Token::LParen, "Expected opening parenthesis")?;
                 let left = self.expr()?;
                 self.require(Token::Comma, "Expected comma")?;
