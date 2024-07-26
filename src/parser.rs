@@ -196,6 +196,12 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a call expression.
+    ///
+    /// Call expressions are used for functions that take arguments.
+    /// The function name is the keyword token, and the arguments are enclosed in parentheses.
+    /// Trailing commas are allowed and ignored.
+    /// Call expressions also include constants, which converted to their respective values.
     fn call(&mut self, w: &Word) -> Result<Box<Expr>, CalcError> {
         match w {
             Word::Inf => Ok(Box::new(Expr::Number(f64::INFINITY))),

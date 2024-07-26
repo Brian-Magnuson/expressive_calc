@@ -1,5 +1,6 @@
 use std::{error, fmt};
 
+/// Error type for the calculator.
 #[derive(Debug)]
 pub struct CalcError {
     message: String,
