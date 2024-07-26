@@ -449,10 +449,38 @@ mod tests {
     }
 
     #[test]
+    fn test_pow_trailing_comma() {
+        let input = vec![
+            Token::Keyword(Word::Pow),
+            Token::LParen,
+            Token::Number(2.0),
+            Token::Comma,
+            Token::Number(3.0),
+            Token::Comma,
+            Token::RParen,
+        ];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Keyword(Word::Pow),
+            left: Box::new(Expr::Number(2.0)),
+            right: Box::new(Expr::Number(3.0)),
+        });
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
     fn test_inf() {
         let input = vec![Token::Keyword(Word::Inf)];
         let mut parser = Parser::new(&input);
         let expected = Box::new(Expr::Number(f64::INFINITY));
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_pi() {
+        let input = vec![Token::Keyword(Word::Pi)];
+        let mut parser = Parser::new(&input);
+        let expected = Box::new(Expr::Number(std::f64::consts::PI));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
 }
