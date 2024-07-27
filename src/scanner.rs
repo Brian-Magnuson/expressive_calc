@@ -64,6 +64,8 @@ pub enum Token {
     Minus,
     Star,
     Slash,
+    Caret,
+    Percent,
     LParen,
     RParen,
     Comma,
@@ -116,6 +118,14 @@ impl<'a> Scanner<'a> {
                     }
                     '/' => {
                         tokens.push(Token::Slash);
+                        self.iter.next();
+                    }
+                    '%' => {
+                        tokens.push(Token::Percent);
+                        self.iter.next();
+                    }
+                    '^' => {
+                        tokens.push(Token::Caret);
                         self.iter.next();
                     }
                     '(' => {

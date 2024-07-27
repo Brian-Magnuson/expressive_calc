@@ -149,4 +149,31 @@ mod tests {
         let result = calculator.quick_evaluate(input).unwrap();
         assert_eq!(result, 8.0);
     }
+
+    #[test]
+    fn test_state() {
+        let input = "1 + 2";
+        let mut calculator = Calculator::new();
+        let result = calculator.evaluate(input).unwrap();
+        assert_eq!(result, ("$0".to_string(), 3.0));
+
+        let input = "$0 * 3";
+        let result = calculator.evaluate(input).unwrap();
+        assert_eq!(result, ("$1".to_string(), 9.0));
+    }
+
+    #[test]
+    fn test_reset() {
+        let input = "1 + 2";
+        let mut calculator = Calculator::new();
+        let result = calculator.evaluate(input).unwrap();
+        assert_eq!(result, ("$0".to_string(), 3.0));
+
+        calculator.reset();
+        assert!(matches!(calculator.quick_evaluate("$0"), Err(_)));
+
+        let input = "1 + 3";
+        let result = calculator.evaluate(input).unwrap();
+        assert_eq!(result, ("$0".to_string(), 4.0));
+    }
 }

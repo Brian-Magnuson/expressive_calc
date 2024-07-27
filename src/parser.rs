@@ -134,12 +134,12 @@ impl<'a> Parser<'a> {
     ///
     /// Factor operations include multiplication and division.
     fn factor(&mut self) -> Result<Box<Expr>, CalcError> {
-        let expr = self.unary()?;
+        let expr = self.power()?;
         loop {
             match self.iter.peek() {
                 Some(Token::Star) => {
                     self.iter.next();
-                    let right = self.unary()?;
+                    let right = self.power()?;
                     return Ok(Box::new(Expr::BinaryOp {
                         op: Token::Star,
                         left: expr,
@@ -148,9 +148,38 @@ impl<'a> Parser<'a> {
                 }
                 Some(Token::Slash) => {
                     self.iter.next();
-                    let right = self.unary()?;
+                    let right = self.power()?;
                     return Ok(Box::new(Expr::BinaryOp {
                         op: Token::Slash,
+                        left: expr,
+                        right,
+                    }));
+                }
+                Some(Token::Percent) => {
+                    self.iter.next();
+                    let right = self.power()?;
+                    return Ok(Box::new(Expr::BinaryOp {
+                        op: Token::Percent,
+                        left: expr,
+                        right,
+                    }));
+                }
+                _ => {
+                    return Ok(expr);
+                }
+            }
+        }
+    }
+
+    fn power(&mut self) -> Result<Box<Expr>, CalcError> {
+        let expr = self.unary()?;
+        loop {
+            match self.iter.peek() {
+                Some(Token::Caret) => {
+                    self.iter.next();
+                    let right = self.unary()?;
+                    return Ok(Box::new(Expr::BinaryOp {
+                        op: Token::Caret,
                         left: expr,
                         right,
                     }));
