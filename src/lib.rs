@@ -30,7 +30,7 @@ impl Calculator {
     pub fn evaluate(&mut self, input: &str) -> Result<(String, f64), CalcError> {
         let tokens = scanner::Scanner::scan(input)?;
 
-        let mut parser = parser::Parser::new(&tokens);
+        let parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
 
         Ok(self.interpreter.interpret(expr)?)
@@ -48,10 +48,18 @@ impl Calculator {
     pub fn quick_evaluate(&self, input: &str) -> Result<f64, CalcError> {
         let tokens = scanner::Scanner::scan(input)?;
 
-        let mut parser = parser::Parser::new(&tokens);
+        let parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
 
         Ok(self.interpreter.quick_interpret(expr)?)
+    }
+
+    /// Reset the calculator, clearing all stored state.
+    ///
+    /// This function resets the interpreter.
+    /// All stored variables are cleared, and the variable count is reset to zero.
+    pub fn reset(&mut self) {
+        self.interpreter.reset();
     }
 }
 

@@ -43,19 +43,19 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    /// Create a new parser with a slice of tokens.
+    /// Create a new Parser with a slice of tokens.
     pub fn new(tokens: &'a [Token]) -> Self {
         Parser {
             iter: tokens.iter().peekable(),
         }
     }
 
-    /// Parse the tokens into an abstract syntax tree.
+    /// Parse the tokens into an abstract syntax tree, consuming the Parser.
     ///
     /// This function will call the first part of the recursive descent parser.
     /// If the iterator is not empty after parsing, an error is returned, even if
     /// the preceding tokens were valid.
-    pub fn parse(&mut self) -> Result<Box<Expr>, CalcError> {
+    pub fn parse(mut self) -> Result<Box<Expr>, CalcError> {
         let result = self.expr();
         // Ensure that the iterator is empty after parsing
         match self.iter.peek() {
@@ -274,14 +274,14 @@ mod tests {
     #[test]
     fn test_parse_empty() {
         let input = vec![];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         assert!(parser.parse().is_err());
     }
 
     #[test]
     fn test_parse_number() {
         let input = vec![Token::Number(42.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::Number(42.0));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn test_unary_op() {
         let input = vec![Token::Minus, Token::Number(42.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::UnaryOp {
             op: Token::Minus,
             operand: Box::new(Expr::Number(42.0)),
@@ -300,7 +300,7 @@ mod tests {
     #[test]
     fn test_parse_addition() {
         let input = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Plus,
             left: Box::new(Expr::Number(1.0)),
@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn test_parse_subtraction() {
         let input = vec![Token::Number(1.0), Token::Minus, Token::Number(2.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Minus,
             left: Box::new(Expr::Number(1.0)),
@@ -330,7 +330,7 @@ mod tests {
             Token::Star,
             Token::Number(3.0),
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Plus,
             left: Box::new(Expr::Number(1.0)),
@@ -354,7 +354,7 @@ mod tests {
             Token::Star,
             Token::Number(3.0),
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Star,
             left: Box::new(Expr::BinaryOp {
@@ -370,7 +370,7 @@ mod tests {
     #[test]
     fn test_variable() {
         let input = vec![Token::Variable("$x".to_string())];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::Variable("$x".to_string()));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
@@ -378,21 +378,21 @@ mod tests {
     #[test]
     fn test_unexpected_token() {
         let input = vec![Token::Plus];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         assert!(parser.parse().is_err());
     }
 
     #[test]
     fn test_missing_closing_paren() {
         let input = vec![Token::LParen, Token::Number(1.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         assert!(parser.parse().is_err());
     }
 
     #[test]
     fn test_excess_tokens() {
         let input = vec![Token::Number(1.0), Token::Number(2.0)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         assert!(parser.parse().is_err());
     }
 
@@ -404,7 +404,7 @@ mod tests {
             Token::Number(4.0),
             Token::RParen,
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::UnaryOp {
             op: Token::Keyword(Word::Sqrt),
             operand: Box::new(Expr::Number(4.0)),
@@ -421,7 +421,7 @@ mod tests {
             Token::Comma,
             Token::RParen,
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::UnaryOp {
             op: Token::Keyword(Word::Sqrt),
             operand: Box::new(Expr::Number(4.0)),
@@ -439,7 +439,7 @@ mod tests {
             Token::Number(3.0),
             Token::RParen,
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Keyword(Word::Pow),
             left: Box::new(Expr::Number(2.0)),
@@ -459,7 +459,7 @@ mod tests {
             Token::Comma,
             Token::RParen,
         ];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::BinaryOp {
             op: Token::Keyword(Word::Pow),
             left: Box::new(Expr::Number(2.0)),
@@ -471,7 +471,7 @@ mod tests {
     #[test]
     fn test_inf() {
         let input = vec![Token::Keyword(Word::Inf)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::Number(f64::INFINITY));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
@@ -479,7 +479,7 @@ mod tests {
     #[test]
     fn test_pi() {
         let input = vec![Token::Keyword(Word::Pi)];
-        let mut parser = Parser::new(&input);
+        let parser = Parser::new(&input);
         let expected = Box::new(Expr::Number(std::f64::consts::PI));
         assert_eq!(*parser.parse().unwrap(), *expected);
     }

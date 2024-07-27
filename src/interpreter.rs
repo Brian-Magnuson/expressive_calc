@@ -43,6 +43,14 @@ impl Interpreter {
     pub fn quick_interpret(&self, input: Box<Expr>) -> Result<f64, CalcError> {
         self.visit(&input)
     }
+
+    /// Reset the interpreter, clearing all stored variables.
+    ///
+    /// This method will clear all stored variables and reset the variable count.
+    pub fn reset(&mut self) {
+        self.table.clear();
+        self.variable_count = 0;
+    }
 }
 impl Visitor<f64> for Interpreter {
     fn visit(&self, expr: &Expr) -> Result<f64, CalcError> {
