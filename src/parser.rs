@@ -38,6 +38,8 @@ pub trait Visitor<T> {
 }
 
 /// A parser used for generating an abstract syntax tree from a vector of tokens.
+///
+/// First, create a new Parser with a slice of tokens using [`Parser::new`]. Then call [`Parser::parse`] to generate the AST.
 pub struct Parser<'a> {
     iter: Peekable<Iter<'a, Token>>,
 }

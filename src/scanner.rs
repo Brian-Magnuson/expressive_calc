@@ -73,7 +73,7 @@ pub enum Token {
 
 /// A scanner used to help convert an input string into a vector of tokens.
 ///
-/// Provides a scanning function, [`Scanner::scan`], that converts an input string into a vector of tokens.
+/// First, create a new scanner with [`Scanner::new`], then call [`Scanner::scan`] to convert the input string into tokens.
 pub struct Scanner<'a> {
     iter: Peekable<Chars<'a>>,
 }
