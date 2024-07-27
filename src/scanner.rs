@@ -74,61 +74,71 @@ pub enum Token {
 /// A scanner used to help convert an input string into a vector of tokens.
 ///
 /// Provides a scanning function, [`Scanner::scan`], that converts an input string into a vector of tokens.
-pub struct Scanner {}
-impl Scanner {
+pub struct Scanner<'a> {
+    iter: Peekable<Chars<'a>>,
+}
+impl<'a> Scanner<'a> {
+    /// Create a new scanner with the input string.
+    pub fn new(input: &'a str) -> Self {
+        Self {
+            iter: input.chars().peekable(),
+        }
+    }
+
     /// Scans the input string and returns a vector of tokens.
+    ///
+    /// Consumes the Scanner to iterate over the input string.
     ///
     /// # Errors
     ///
     /// Returns a [`CalcError`] if an invalid character is encountered, or if a number cannot be parsed.
-    pub fn scan(input: &str) -> Result<Vec<Token>, CalcError> {
-        let mut input_iter = input.chars().peekable();
+    pub fn scan(mut self) -> Result<Vec<Token>, CalcError> {
         let mut tokens = Vec::new();
 
         loop {
-            match input_iter.peek() {
+            match self.iter.peek() {
                 None => return Ok(tokens),
                 Some(c) => match c {
                     ' ' => {
-                        input_iter.next();
+                        self.iter.next();
                     }
                     '+' => {
                         tokens.push(Token::Plus);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     '-' => {
                         tokens.push(Token::Minus);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     '*' => {
                         tokens.push(Token::Star);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     '/' => {
                         tokens.push(Token::Slash);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     '(' => {
                         tokens.push(Token::LParen);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     ')' => {
                         tokens.push(Token::RParen);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     ',' => {
                         tokens.push(Token::Comma);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     'a'..='z' | 'A'..='Z' => {
-                        tokens.push(Token::Keyword(Scanner::scan_word(&mut input_iter)?));
+                        tokens.push(Token::Keyword(self.scan_word()?));
                     }
                     '$' => {
-                        input_iter.next();
-                        tokens.push(Token::Variable(Scanner::scan_variable(&mut input_iter)?));
+                        self.iter.next();
+                        tokens.push(Token::Variable(self.scan_variable()?));
                     }
                     '0'..='9' => {
-                        tokens.push(Token::Number(Scanner::scan_number(&mut input_iter)?));
+                        tokens.push(Token::Number(self.scan_number()?));
                     }
                     _ => return Err(CalcError::new("Invalid character", None)),
                 },
@@ -147,22 +157,22 @@ impl Scanner {
     /// # Errors
     ///
     /// If the number cannot be parsed, a [`CalcError`] is returned containing the [`std::num::ParseFloatError`].
-    fn scan_number(input_iter: &mut Peekable<Chars>) -> Result<f64, CalcError> {
+    fn scan_number(&mut self) -> Result<f64, CalcError> {
         let mut number = String::new();
         loop {
-            match input_iter.peek() {
+            match self.iter.peek() {
                 None => break,
                 Some(c) => match c {
                     '0'..='9' | '.' => {
                         number.push(*c);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     'E' | 'e' => {
                         number.push(*c);
-                        input_iter.next();
-                        match input_iter.peek() {
+                        self.iter.next();
+                        match self.iter.peek() {
                             Some(&'+') | Some(&'-') => {
-                                number.push(input_iter.next().unwrap());
+                                number.push(self.iter.next().unwrap());
                             }
                             _ => {}
                         }
@@ -181,24 +191,26 @@ impl Scanner {
     /// Scans a variable from the input iterator.
     ///
     /// All variables must start with a '$' and can contain any alphanumeric character.
+    /// The exact characters that are accepted can be expressed as `[0-9a-zA-Z_]` in regex.
     /// If an invalid character is encountered, the variable is considered complete.
     /// An exception is when there are no characters following the '$'.
     ///
     /// # Errors
     ///
     /// Returns a [`CalcError`] if there were no alphanumeric characters following the '$'.
-    fn scan_variable(input_iter: &mut Peekable<Chars>) -> Result<String, CalcError> {
+    /// For example, scanning `$v#` will not return an error immediately, but `$#` will.
+    fn scan_variable(&mut self) -> Result<String, CalcError> {
         let mut variable = String::from("$");
         let mut has_char = false;
 
         loop {
-            match input_iter.peek() {
+            match self.iter.peek() {
                 None => break,
                 Some(c) => match c {
-                    '0'..='9' | 'a'..='z' | 'A'..='Z' => {
+                    '0'..='9' | 'a'..='z' | 'A'..='Z' | '_' => {
                         variable.push(*c);
                         has_char = true;
-                        input_iter.next();
+                        self.iter.next();
                     }
                     _ => break,
                 },
@@ -214,16 +226,24 @@ impl Scanner {
 
     /// Scans a reserved word from the input iterator.
     ///
+    /// Returns a [`Word`] enum representing the reserved word.
     /// Reserved words include special functions like `sqrt`.
-    fn scan_word(input_iter: &mut Peekable<Chars>) -> Result<Word, CalcError> {
+    /// Reserved words also include constants like `pi` and special values like `inf`.
+    /// This function consumes all characters that could be part of the keyword.
+    /// This happens to include uppercase letters despite all reserved words being lowercase.
+    ///
+    /// # Errors
+    ///
+    /// If an unknown keyword is encountered, a [`CalcError`] is returned.
+    fn scan_word(&mut self) -> Result<Word, CalcError> {
         let mut keyword = String::new();
         loop {
-            match input_iter.peek() {
+            match self.iter.peek() {
                 None => break,
                 Some(c) => match c {
                     'a'..='z' | 'A'..='Z' => {
                         keyword.push(*c);
-                        input_iter.next();
+                        self.iter.next();
                     }
                     _ => break,
                 },
@@ -284,84 +304,96 @@ mod tests {
     fn test_scan_empty_str() {
         let input = "";
         let expected = vec![];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_whitespace() {
         let input = "  ";
         let expected = vec![];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_plus() {
         let input = "+";
         let expected = vec![Token::Plus];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_minus() {
         let input = "-";
         let expected = vec![Token::Minus];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_digit() {
         let input = "0";
         let expected = vec![Token::Number(0.0)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_number() {
         let input = "123.456";
         let expected = vec![Token::Number(123.456)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_number_scientific_notation() {
         let input = "1.23E4";
         let expected = vec![Token::Number(1.23E4)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_number_negative_exponent() {
         let input = "1.23E-4";
         let expected = vec![Token::Number(1.23E-4)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_scan_number_plus_exponent() {
         let input = "1.23E+4";
         let expected = vec![Token::Number(1.23E4)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_addition() {
         let input = "1 + 2";
         let expected = vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_negation() {
         let input = "-1";
         let expected = vec![Token::Minus, Token::Number(1.0)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_multiplication() {
         let input = "2 * 3";
         let expected = vec![Token::Number(2.0), Token::Star, Token::Number(3.0)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
@@ -374,7 +406,8 @@ mod tests {
             Token::Star,
             Token::Number(3.0),
         ];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
@@ -389,34 +422,39 @@ mod tests {
             Token::Star,
             Token::Number(3.0),
         ];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_add_scientific_notation() {
         let input = "1.23E4 + 5.67E-8";
         let expected = vec![Token::Number(1.23E4), Token::Plus, Token::Number(5.67E-8)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_err_invalid_char() {
         let input = "1 + a";
-        assert!(matches!(Scanner::scan(input), Err(CalcError { .. })));
+        let scanner = Scanner::new(input);
+        assert!(matches!(scanner.scan(), Err(CalcError { .. })));
     }
 
     #[test]
     fn test_variable() {
         let input = "$var";
         let expected = vec![Token::Variable(String::from("$var"))];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
     fn test_keyword() {
         let input = "sqrt";
         let expected = vec![Token::Keyword(Word::Sqrt)];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 
     #[test]
@@ -430,6 +468,7 @@ mod tests {
             Token::Number(3.0),
             Token::RParen,
         ];
-        assert_eq!(Scanner::scan(input).unwrap(), expected);
+        let scanner = Scanner::new(input);
+        assert_eq!(scanner.scan().unwrap(), expected);
     }
 }

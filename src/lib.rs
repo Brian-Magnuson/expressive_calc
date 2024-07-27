@@ -28,7 +28,8 @@ impl Calculator {
     ///
     /// Returns a [`CalcError`] if an invalid character is encountered, or if an expression cannot be parsed.
     pub fn evaluate(&mut self, input: &str) -> Result<(String, f64), CalcError> {
-        let tokens = scanner::Scanner::scan(input)?;
+        let scanner = scanner::Scanner::new(input);
+        let tokens = scanner.scan()?;
 
         let parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
@@ -46,7 +47,8 @@ impl Calculator {
     ///
     /// Returns a [`CalcError`] if an invalid character is encountered, or if an expression cannot be parsed.
     pub fn quick_evaluate(&self, input: &str) -> Result<f64, CalcError> {
-        let tokens = scanner::Scanner::scan(input)?;
+        let scanner = scanner::Scanner::new(input);
+        let tokens = scanner.scan()?;
 
         let parser = parser::Parser::new(&tokens);
         let expr = parser.parse()?;
