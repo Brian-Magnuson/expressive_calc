@@ -140,6 +140,22 @@ impl<'a> Scanner<'a> {
                         tokens.push(Token::Comma);
                         self.iter.next();
                     }
+                    '√' => {
+                        tokens.push(Token::Keyword(Word::Sqrt));
+                        self.iter.next();
+                    }
+                    'π' => {
+                        tokens.push(Token::Keyword(Word::Pi));
+                        self.iter.next();
+                    }
+                    'τ' => {
+                        tokens.push(Token::Keyword(Word::Tau));
+                        self.iter.next();
+                    }
+                    'ϕ' | 'φ' => {
+                        tokens.push(Token::Keyword(Word::Phi));
+                        self.iter.next();
+                    }
                     'a'..='z' | 'A'..='Z' => {
                         tokens.push(Token::Keyword(self.scan_word()?));
                     }
