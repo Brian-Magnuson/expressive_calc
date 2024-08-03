@@ -218,10 +218,16 @@ impl<'a> Parser<'a> {
             Some(Token::Keyword(w)) => self.call(w),
             Some(Token::LParen) => {
                 let expr = self.expr()?;
-                match self.iter.next() {
-                    Some(Token::RParen) => Ok(expr),
-                    _ => Err(CalcError::new("Expected closing parenthesis", None)),
-                }
+                self.require(Token::RParen, "Expected closing parenthesis")?;
+                Ok(expr)
+            }
+            Some(Token::Bar) => {
+                let expr = self.expr()?;
+                self.require(Token::Bar, "Expected closing bar")?;
+                Ok(Box::new(Expr::UnaryOp {
+                    op: Token::Keyword(Word::Abs),
+                    operand: expr,
+                }))
             }
             _ => Err(CalcError::new("Not a valid expression", None)),
         }
@@ -512,6 +518,27 @@ mod tests {
         let input = vec![Token::Keyword(Word::Pi)];
         let parser = Parser::new(&input);
         let expected = Box::new(Expr::Number(std::f64::consts::PI));
+        assert_eq!(*parser.parse().unwrap(), *expected);
+    }
+
+    #[test]
+    fn test_bars() {
+        let input = vec![
+            Token::Bar,
+            Token::Number(-1.0),
+            Token::Bar,
+            Token::Star,
+            Token::Number(-1.0),
+        ];
+        let parser = Parser::new(&input);
+        let expected = Box::new(Expr::BinaryOp {
+            op: Token::Star,
+            left: Box::new(Expr::UnaryOp {
+                op: Token::Keyword(Word::Abs),
+                operand: Box::new(Expr::Number(-1.0)),
+            }),
+            right: Box::new(Expr::Number(-1.0)),
+        });
         assert_eq!(*parser.parse().unwrap(), *expected);
     }
 }

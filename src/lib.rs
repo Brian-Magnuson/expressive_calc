@@ -151,6 +151,14 @@ mod tests {
     }
 
     #[test]
+    fn test_abs_bars() {
+        let input = "|-42|";
+        let calculator = Calculator::new();
+        let result = calculator.quick_evaluate(input).unwrap();
+        assert_eq!(result, 42.0);
+    }
+
+    #[test]
     fn test_state() {
         let input = "1 + 2";
         let mut calculator = Calculator::new();

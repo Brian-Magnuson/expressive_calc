@@ -68,6 +68,7 @@ pub enum Token {
     Percent,
     LParen,
     RParen,
+    Bar,
     Comma,
     Variable(String),
     Keyword(Word),
@@ -134,6 +135,10 @@ impl<'a> Scanner<'a> {
                     }
                     ')' => {
                         tokens.push(Token::RParen);
+                        self.iter.next();
+                    }
+                    '|' => {
+                        tokens.push(Token::Bar);
                         self.iter.next();
                     }
                     ',' => {
